@@ -11,6 +11,7 @@ import UIKit
 class DropMenuButton: UIButton, UITableViewDelegate, UITableViewDataSource
 {
     var items = [String]()
+    var allItems = [String]()
     var table = UITableView()
     var act = [() -> (Void)]()
     
@@ -28,26 +29,26 @@ class DropMenuButton: UIButton, UITableViewDelegate, UITableViewDataSource
                 , animations: { 
                     self.table.alpha = 1;
             })
-          
-        }
-        
-        else
-        {
-            
+        } else {
             UIView.animate(withDuration: 0.3
                 , animations: {
                     self.table.alpha = 0;
                     self.layer.zPosition = 0
             })
-    
         }
-        
     }
 
     
     func initMenu(_ items: [String], actions: [() -> (Void)])
     {
         self.items = items
+        self.allItems = items
+        
+        self.setTitle(items[0], for: UIControlState())
+        self.setTitle(items[0], for: UIControlState.highlighted)
+        self.setTitle(items[0], for: UIControlState.selected)
+        self.items.removeFirst()
+
         self.act = actions
         
         var resp = self as UIResponder
@@ -82,7 +83,12 @@ class DropMenuButton: UIButton, UITableViewDelegate, UITableViewDataSource
     func initMenu(_ items: [String])
     {
         self.items = items
-        
+        self.allItems = items
+        self.setTitle(items[0], for: UIControlState())
+        self.setTitle(items[0], for: UIControlState.highlighted)
+        self.setTitle(items[0], for: UIControlState.selected)
+        self.items.removeFirst()
+
         var resp = self as UIResponder
         
         while !(resp.isKind(of: UIViewController.self) || (resp.isKind(of: UITableViewCell.self))) && resp.next != nil
@@ -155,17 +161,21 @@ class DropMenuButton: UIButton, UITableViewDelegate, UITableViewDataSource
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
         
-        self.setTitle(items[(indexPath as NSIndexPath).row], for: UIControlState())
+        let prestTitle = items[(indexPath as NSIndexPath).row]
+        self.setTitle(prestTitle, for: UIControlState())
         self.setTitle(items[(indexPath as NSIndexPath).row], for: UIControlState.highlighted)
         self.setTitle(items[(indexPath as NSIndexPath).row], for: UIControlState.selected)
 
-        if self.act.count > 1
-        {
+        if self.act.count > 1  {
             self.act[indexPath.row]()
         }
 
         showItems()
         
+        self.items.removeAll()
+        self.items.append(contentsOf: self.allItems)
+        self.items.remove(at: items.index(of: prestTitle)!)
+        table.reloadData()
     }
 
     
@@ -178,8 +188,11 @@ class DropMenuButton: UIButton, UITableViewDelegate, UITableViewDataSource
         itemLabel.font = self.titleLabel?.font
         itemLabel.textColor = self.backgroundColor
         
+        itemLabel.layer.borderColor = backgroundColor?.cgColor
+        itemLabel.layer.borderWidth = 0.5
+        
         let bgColorView = UIView()
-        bgColorView.backgroundColor = UIColor.red
+        bgColorView.backgroundColor = UIColor.orange
         
         let cell = UITableViewCell(frame: CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height))
         cell.backgroundColor = self.titleLabel?.textColor
